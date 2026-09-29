@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TourTracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050505">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TourTracker">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--panel:#100818;--line:#2b1945;--gold:#e6b93a;--red:#e0263f;--purple:#8b3dff;--lilac:#c39bff;--text:#f3ecdc;--mute:#9a8fae}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--text);font:400 16px/1.5 Barlow,system-ui,sans-serif;padding:20px 16px 60px;max-width:760px;margin:0 auto}
+h1,h2,.num,button,label.pill{font-family:'Chakra Petch',system-ui,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
+h1{font-size:1.7rem;font-weight:700;color:var(--gold);letter-spacing:.02em}
+h1 span{color:var(--red)}
+h2{font-size:1.05rem;font-weight:700;margin-bottom:12px;color:var(--gold)}
+.hero{border-left:6px solid var(--red);background:linear-gradient(90deg,#1a0b2b,var(--panel));padding:18px 20px;border-radius:0 10px 10px 0;margin-bottom:14px}
+.hero small{color:var(--mute);font-size:.95rem}
+.hero .num{font-size:clamp(2.2rem,10vw,3.4rem);font-weight:700;color:var(--gold);line-height:1.1}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card small{color:var(--mute);display:block}
+.card .num{font-size:1.25rem;font-weight:700}
+.card.wide{grid-column:span 2}
+.pos{color:var(--gold)}.neg{color:var(--red)}.pur{color:var(--lilac)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:20px}
+.types{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.types input{position:absolute;opacity:0}
+label.pill{display:block;text-align:center;padding:10px 6px;border:2px solid var(--line);border-radius:8px;cursor:pointer;font-weight:700;color:var(--mute)}
+.types input:checked+label.pill{color:#000;border-color:transparent}
+#t-entry:checked+label.pill{background:var(--red);color:#fff}
+#t-win:checked+label.pill{background:var(--gold)}
+#t-fund:checked+label.pill{background:var(--purple);color:#fff}
+#t-dist:checked+label.pill{background:var(--lilac)}
+.types input:focus-visible+label.pill,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.row .full{grid-column:span 2}
+label.f{display:block;font-size:.85rem;color:var(--mute);margin-bottom:3px}
+input[type=number],input[type=text],input[type=date]{width:100%;background:#000;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;color-scheme:dark}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 16px;font-weight:700;font-size:1rem}
+.go{background:var(--purple);color:#fff;width:100%}
+.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold);padding:8px 12px;font-size:.9rem}
+.day{margin-bottom:16px}
+.day h3{font:700 .95rem 'Chakra Petch',sans-serif;color:var(--lilac);display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:6px}
+.tx{display:flex;align-items:center;gap:10px;padding:8px 0 8px 10px;border-left:4px solid;margin-bottom:4px;background:#0a0512}
+.tx .info{flex:1;min-width:0}.tx .info b{font-weight:600}
+.tx .info small{display:block;color:var(--mute);overflow-wrap:anywhere}
+.tx .num{font-weight:700;white-space:nowrap}
+.tx .x{background:none;color:var(--mute);padding:4px 10px;font-size:1.2rem}
+.empty{color:var(--mute);text-align:center;padding:18px 0}
+.set{display:flex;flex-wrap:wrap;gap:12px;align-items:center;color:var(--mute);font-size:.9rem}
+.set input[type=text]{width:70px}
+.bar{display:flex;gap:8px;flex-wrap:wrap}
+@media(min-width:600px){.grid{grid-template-columns:repeat(3,1fr)}.card.wide{grid-column:span 1}.types{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Tour<span>Tracker</span></h1>
+  <div class="bar"><button class="ghost" id="pdf">Export PDF</button></div>
+</header>
+
+<div class="hero"><small>Total balance</small><div class="num" id="bal">0</div></div>
+<div class="grid">
+  <div class="card"><small>Winnings</small><div class="num pos" id="win">0</div></div>
+  <div class="card"><small>Entry fees</small><div class="num neg" id="entry">0</div></div>
+  <div class="card"><small>Funds added</small><div class="num pur" id="fund">0</div></div>
+  <div class="card"><small>Distributed</small><div class="num pur" id="dist">0</div></div>
+  <div class="card wide"><small>Total profit / loss</small><div class="num" id="pl">0</div></div>
+</div>
+
+<section>
+  <h2>New entry</h2>
+  <div class="types" role="radiogroup" aria-label="Entry type">
+    <input type="radio" name="type" id="t-entry" value="entry" checked><label class="pill" for="t-entry">Entry fee</label>
+    <input type="radio" name="type" id="t-win" value="win"><label class="pill" for="t-win">Winning</label>
+    <input type="radio" name="type" id="t-fund" value="fund"><label class="pill" for="t-fund">Add funds</label>
+    <input type="radio" name="type" id="t-dist" value="dist"><label class="pill" for="t-dist">Distribute</label>
+  </div>
+  <div class="row">
+    <div><label class="f" for="amt">Amount</label><input type="number" id="amt" min="0" step="any" inputmode="decimal" placeholder="0"></div>
+    <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
+    <div class="full" id="plw" hidden><label class="f" for="players">Number of players sharing</label><input type="number" id="players" min="1" step="1" inputmode="numeric" placeholder="e.g. 4"></div>
+    <div class="full"><label class="f" for="note">Tournament or note (optional)</label><input type="text" id="note" maxlength="80" placeholder="e.g. Weekend cup, Round 2"></div>
+  </div>
+  <button class="go" id="save">Save entry</button>
+</section>
+
+<section>
+  <h2>History</h2>
+  <div id="hist"></div>
+</section>
+
+<section>
+  <h2>Settings</h2>
+  <div class="set">
+    <label>Currency <input type="text" id="cur" maxlength="4"></label>
+    <label><input type="checkbox" id="plDist"> Count distributions in profit / loss</label>
+    <button class="ghost" id="reset">Delete all data</button>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+const KEY='tourtracker.v1';
+const T={fund:{l:'Add funds',s:1,c:'#8b3dff'},win:{l:'Winning',s:1,c:'#e6b93a'},entry:{l:'Entry fee',s:-1,c:'#e0263f'},dist:{l:'Distribute',s:-1,c:'#c39bff'}};
+const $=id=>document.getElementById(id);
+let S=load();
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&Array.isArray(v.tx))return v}catch(e){}return{tx:[],cur:'৳',pl:false}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const num=n=>Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:2});
+const money=n=>(n<0?'-':'')+S.cur+' '+num(n);
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dayLabel=d=>new Date(d+'T00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+const sorted=()=>[...S.tx].sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+
+function totals(){
+  const t={fund:0,win:0,entry:0,dist:0};
+  S.tx.forEach(x=>t[x.type]+=x.amt);
+  t.bal=t.fund+t.win-t.entry-t.dist;
+  t.pl=t.win-t.entry-(S.pl?t.dist:0);
+  return t;
+}
+
+function render(){
+  const t=totals();
+  $('bal').textContent=money(t.bal);
+  $('bal').className='num '+(t.bal<0?'neg':'');
+  ['win','entry','fund','dist'].forEach(k=>$(k).textContent=money(t[k]));
+  $('pl').textContent=(t.pl>0?'+':'')+money(t.pl);
+  $('pl').className='num '+(t.pl<0?'neg':'pos');
+  $('cur').value=S.cur;$('plDist').checked=S.pl;
+  const days={};
+  sorted().reverse().forEach(x=>(days[x.date]=days[x.date]||[]).push(x));
+  const keys=Object.keys(days);
+  $('hist').innerHTML=keys.length?keys.map(d=>{
+    const net=days[d].reduce((s,x)=>s+T[x.type].s*x.amt,0);
+    return `<div class="day"><h3><span>${dayLabel(d)}</span><span>${net>0?'+':''}${money(net)}</span></h3>`+
+    days[d].map(x=>`<div class="tx" style="border-color:${T[x.type].c}"><div class="info"><b>${T[x.type].l}</b>${x.note?`<small>${esc(x.note)}</small>`:''}${share(x,S.cur)?`<small>${share(x,S.cur)}</small>`:''}</div><div class="num" style="color:${T[x.type].c}">${T[x.type].s>0?'+':'-'}${S.cur} ${num(x.amt)}</div><button class="x" data-id="${x.id}" aria-label="Delete entry">&times;</button></div>`).join('')+'</div>';
+  }).join(''):'<div class="empty">No entries yet. Add your first entry above.</div>';
+}
+
+$('date').value=today();
+const share=(x,c)=>x.type==='dist'&&x.players>1?`Split among ${x.players} players: ${c} ${num(x.amt/x.players)} each`:'';
+const curType=()=>document.querySelector('input[name=type]:checked').value;
+document.querySelector('.types').onchange=()=>{$('plw').hidden=curType()!=='dist'};
+$('save').onclick=()=>{
+  const amt=parseFloat($('amt').value),type=curType();
+  if(!(amt>0)){$('amt').focus();return}
+  const players=type==='dist'?Math.max(1,parseInt($('players').value)||1):0;
+  if(type==='dist'&&amt>totals().bal&&!confirm('This is more than your total balance. Distribute anyway?'))return;
+  S.tx.push({id:Date.now(),type,amt,players,note:$('note').value.trim(),date:$('date').value||today()});
+  save();$('amt').value='';$('note').value='';$('players').value='';render();
+};
+$('hist').onclick=e=>{
+  const b=e.target.closest('.x');if(!b)return;
+  if(confirm('Delete this entry?')){S.tx=S.tx.filter(x=>x.id!=b.dataset.id);save();render()}
+};
+$('cur').oninput=e=>{S.cur=e.target.value||'';save();render()};
+$('plDist').onchange=e=>{S.pl=e.target.checked;save();render()};
+$('reset').onclick=()=>{if(confirm('Delete ALL entries? This cannot be undone.')){S.tx=[];save();render()}};
+
+$('pdf').onclick=()=>{
+  if(!window.jspdf){alert('The PDF library did not load. Check your internet connection and try again.');return}
+  if(!S.tx.length){alert('Add at least one entry before exporting.');return}
+  const d=new window.jspdf.jsPDF();
+  const pc=S.cur==='৳'?'Tk':S.cur.replace(/[^\x20-\x7E]/g,'');
+  const m=n=>(n<0?'-':'')+pc+' '+num(n);
+  const t=totals();
+  d.setFillColor(5,5,5);d.rect(0,0,210,28,'F');
+  d.setTextColor(230,185,58);d.setFontSize(22);d.text('TourTracker',14,18);
+  d.setFontSize(9);d.setTextColor(200,200,200);d.text('Report generated '+new Date().toLocaleDateString('en-GB'),196,18,{align:'right'});
+  d.autoTable({startY:34,head:[['Summary','Amount']],theme:'grid',
+    headStyles:{fillColor:[139,61,255],textColor:[255,255,255]},
+    body:[['Total balance',m(t.bal)],['Winnings',m(t.win)],['Entry fees',m(t.entry)],['Funds added',m(t.fund)],['Distributed',m(t.dist)],['Total profit / loss',(t.pl>0?'+':'')+m(t.pl)]],
+    columnStyles:{1:{halign:'right'}},margin:{left:14,right:14}});
+  let y=d.lastAutoTable.finalY+10,bal=0,cur=null,rows=[],net=0;
+  const groups=[];
+  sorted().forEach(x=>{
+    if(x.date!==cur){cur=x.date;groups.push({date:cur,rows:[],net:0})}
+    const g=groups[groups.length-1],v=T[x.type].s*x.amt;
+    bal+=v;g.net+=v;g.close=bal;
+    g.rows.push([T[x.type].l,[x.note,share(x,pc)].filter(Boolean).join('\n')||'-',(v>0?'+':'-')+' '+pc+' '+num(x.amt),m(bal)]);
+  });
+  groups.forEach(g=>{
+    d.autoTable({startY:y,theme:'grid',showFoot:'lastPage',margin:{left:14,right:14},
+      head:[[{content:dayLabel(g.date),colSpan:4,styles:{fillColor:[5,5,5],textColor:[230,185,58]}}],['Type','Tournament / note','Amount','Balance']],
+      headStyles:{fillColor:[139,61,255],textColor:[255,255,255]},
+      body:g.rows,
+      foot:[[{content:'Day net / closing balance',colSpan:2},(g.net>0?'+ ':g.net<0?'- ':'')+pc+' '+num(g.net),m(g.close)]],
+      footStyles:{fillColor:[224,38,63],textColor:[255,255,255]},
+      columnStyles:{2:{halign:'right'},3:{halign:'right'}}});
+    y=d.lastAutoTable.finalY+8;
+  });
+  d.save('TourTracker-'+today()+'.pdf');
+};
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+render();
+</script>
+</body>
+</html>
